@@ -1,216 +1,2530 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.0.3",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
+    "title": "Land Backend API",
+    "description": "Kamino/Solana read API with freshness and coverage metadata.",
+    "version": "0.1.0"
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://api2.tryland.eu"
     }
   ],
   "security": [
     {
-      "bearerAuth": []
+      "BearerApiKey": []
     }
   ],
   "paths": {
-    "/plants": {
+    "/_wiring": {
       "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
         "responses": {
           "200": {
-            "description": "Plant response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
-                  }
+                  "$ref": "#/components/schemas/WiringResponse"
                 }
               }
-            }
-          },
-          "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            },
+            "description": "Wiring metadata"
           }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plant"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
+        "security": [],
+        "summary": "Runtime wiring",
+        "tags": [
+          "System"
+        ]
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/healthz": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Healthy"
+          }
+        },
+        "security": [],
+        "summary": "Health check",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/history/events": {
+      "get": {
         "parameters": [
           {
-            "name": "id",
+            "in": "query",
+            "name": "chain",
+            "schema": {
+              "enum": [
+                "solana"
+              ],
+              "example": "solana",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "protocol",
+            "schema": {
+              "enum": [
+                "kamino"
+              ],
+              "example": "kamino",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "event_type",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "wallet_address",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market_address",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset_token_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryEventPagedResponse"
+                }
+              }
+            },
+            "description": "Historical events"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "List historical events (ClickHouse)",
+        "tags": [
+          "History"
+        ]
+      }
+    },
+    "/history/obligations/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationHistoryPagedResponse"
+                }
+              }
+            },
+            "description": "Obligation history"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "List obligation history (ClickHouse)",
+        "tags": [
+          "History"
+        ]
+      }
+    },
+    "/history/positions/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionHistoryPagedResponse"
+                }
+              }
+            },
+            "description": "Position history"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "List position history (ClickHouse)",
+        "tags": [
+          "History"
+        ]
+      }
+    },
+    "/history/prices": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "chain",
+            "schema": {
+              "enum": [
+                "solana"
+              ],
+              "example": "solana",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "protocol",
+            "schema": {
+              "enum": [
+                "kamino"
+              ],
+              "example": "kamino",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset_token_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "price_feed_id",
+            "schema": {
+              "example": "kamino-mint:So11111111111111111111111111111111111111112",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceTickPagedResponse"
+                }
+              }
+            },
+            "description": "Historical prices"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "List historical prices (ClickHouse)",
+        "tags": [
+          "History"
+        ]
+      }
+    },
+    "/history/rates": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "chain",
+            "schema": {
+              "enum": [
+                "solana"
+              ],
+              "example": "solana",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "protocol",
+            "schema": {
+              "enum": [
+                "kamino"
+              ],
+              "example": "kamino",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market_address",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset_token_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "frequency",
+            "schema": {
+              "default": "minute",
+              "enum": [
+                "minute",
+                "hour",
+                "day"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryRatePagedResponse"
+                }
+              }
+            },
+            "description": "Historical rates"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "List historical borrow/supply APY (ClickHouse)",
+        "tags": [
+          "History"
+        ]
+      }
+    },
+    "/markets": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "chain",
+            "schema": {
+              "enum": [
+                "solana"
+              ],
+              "example": "solana",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "protocol",
+            "schema": {
+              "enum": [
+                "kamino"
+              ],
+              "example": "kamino",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pool_ref",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketPagedResponse"
+                }
+              }
+            },
+            "description": "Markets list"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "List markets",
+        "tags": [
+          "Markets"
+        ]
+      }
+    },
+    "/markets/{id}": {
+      "get": {
+        "parameters": [
+          {
             "in": "path",
-            "description": "ID of plant to delete",
+            "name": "id",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
             }
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
+          "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/MarketView"
                 }
               }
-            }
-          }
-        }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
+            },
+            "description": "Market detail"
+          },
+          "404": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
           }
         },
+        "summary": "Get market",
+        "tags": [
+          "Markets"
+        ]
+      }
+    },
+    "/obligations/{id}/risk": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObligationRiskResponse"
+                }
+              }
+            },
+            "description": "Obligation risk"
+          },
+          "404": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
           }
-        }
+        },
+        "summary": "Obligation risk view",
+        "tags": [
+          "Obligations"
+        ]
+      }
+    },
+    "/prices": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "chain",
+            "schema": {
+              "enum": [
+                "solana"
+              ],
+              "example": "solana",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asset_token_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "price_feed_id",
+            "schema": {
+              "example": "kamino-mint:So11111111111111111111111111111111111111112",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricePagedResponse"
+                }
+              }
+            },
+            "description": "Prices list"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "List prices",
+        "tags": [
+          "Assets"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Ready"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Not ready"
+          }
+        },
+        "security": [],
+        "summary": "Readiness check",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/tokens": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "chain",
+            "schema": {
+              "enum": [
+                "solana"
+              ],
+              "example": "solana",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "symbol",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "address_or_mint",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPagedResponse"
+                }
+              }
+            },
+            "description": "Tokens list"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "List tokens",
+        "tags": [
+          "Assets"
+        ]
+      }
+    },
+    "/wallets/{chain}/{address}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/chain"
+          },
+          {
+            "$ref": "#/components/parameters/address"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletSummaryResponse"
+                }
+              }
+            },
+            "description": "Wallet summary"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "Wallet summary",
+        "tags": [
+          "Wallets"
+        ]
+      }
+    },
+    "/wallets/{chain}/{address}/obligations": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/chain"
+          },
+          {
+            "$ref": "#/components/parameters/address"
+          },
+          {
+            "description": "Filter by lending market pubkey",
+            "in": "query",
+            "name": "pool_ref",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletObligationsResponse"
+                }
+              }
+            },
+            "description": "Wallet obligations"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "Wallet obligations",
+        "tags": [
+          "Wallets"
+        ]
+      }
+    },
+    "/wallets/{chain}/{address}/positions": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/chain"
+          },
+          {
+            "$ref": "#/components/parameters/address"
+          },
+          {
+            "description": "Filter by lending market pubkey",
+            "in": "query",
+            "name": "pool_ref",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by asset mint pubkey",
+            "in": "query",
+            "name": "asset",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by position type",
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "enum": [
+                "supply",
+                "borrow"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletPositionsResponse"
+                }
+              }
+            },
+            "description": "Wallet positions"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "Wallet positions",
+        "tags": [
+          "Wallets"
+        ]
+      }
+    },
+    "/wallets/{chain}/{address}/summary": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/chain"
+          },
+          {
+            "$ref": "#/components/parameters/address"
+          },
+          {
+            "description": "Lending market pubkey (required)",
+            "in": "query",
+            "name": "pool_ref",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletLendingSummaryResponse"
+                }
+              }
+            },
+            "description": "Lending summary with obligation, deposits, and borrows"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "Wallet lending summary for a specific pool",
+        "tags": [
+          "Wallets"
+        ]
+      }
+    },
+    "/webhooks/events/{event_id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEventResponse"
+                }
+              }
+            },
+            "description": "Webhook event snapshot"
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "401": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "summary": "Get webhook event snapshot for the authenticated tenant",
+        "tags": [
+          "Webhooks"
+        ]
       }
     }
   },
   "components": {
-    "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
-          },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
+    "parameters": {
+      "address": {
+        "in": "path",
+        "name": "address",
+        "required": true,
+        "schema": {
+          "type": "string"
         }
       },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
+      "chain": {
+        "in": "path",
+        "name": "chain",
+        "required": true,
+        "schema": {
+          "enum": [
+            "solana"
+          ],
+          "example": "solana",
+          "type": "string"
+        }
+      },
+      "id": {
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "limit": {
+        "in": "query",
+        "name": "limit",
+        "required": false,
+        "schema": {
+          "default": 100,
+          "maximum": 500,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "offset": {
+        "in": "query",
+        "name": "offset",
+        "required": false,
+        "schema": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "responses": {
+      "ApiError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiErrorResponse"
             }
           }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
+        },
+        "description": "Error response"
+      }
+    },
+    "schemas": {
+      "ApiErrorResponse": {
         "type": "object",
         "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
+          "code": {
+            "type": "string"
           },
           "message": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "AssetRef": {
+        "type": "object",
+        "properties": {
+          "token_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "symbol": {
+            "type": "string",
+            "example": "SOL"
+          },
+          "decimals": {
+            "type": "integer",
+            "example": 9
+          },
+          "logo_uri": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "token_id",
+          "symbol",
+          "decimals"
+        ]
+      },
+      "CoverageResponse": {
+        "type": "object",
+        "properties": {
+          "coverage_mode": {
+            "type": "string",
+            "enum": [
+              "full",
+              "forward_only"
+            ],
+            "example": "forward_only"
+          },
+          "coverage_start_slot": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "coverage_start_block": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "wallet_tracking_status": {
+            "type": "string",
+            "enum": [
+              "seeded",
+              "tracked",
+              "not_tracked_yet"
+            ]
+          },
+          "first_tracked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "coverage_mode",
+          "wallet_tracking_status"
+        ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp"
+        ]
+      },
+      "HistoryEventView": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "event_type": {
+            "type": "string",
+            "example": "DEPOSIT_OBSERVED"
+          },
+          "chain": {
+            "type": "string",
+            "example": "solana"
+          },
+          "protocol": {
+            "type": "string",
+            "example": "kamino"
+          },
+          "subscription_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "signature": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slot": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "description": "Event-specific data"
+          }
+        },
+        "required": [
+          "event_id",
+          "event_type",
+          "chain",
+          "protocol",
+          "occurred_at"
+        ]
+      },
+      "HistoryEventPagedResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryEventView"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "HistoryRateView": {
+        "type": "object",
+        "properties": {
+          "market_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "supply_apy": {
+            "type": "number",
+            "example": 0.034
+          },
+          "borrow_apy_variable": {
+            "type": "number",
+            "example": 0.058
+          },
+          "utilization": {
+            "type": "number",
+            "example": 0.67
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "market_id",
+          "chain",
+          "protocol",
+          "supply_apy",
+          "borrow_apy_variable",
+          "utilization",
+          "as_of"
+        ]
+      },
+      "HistoryRatePagedResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryRateView"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "MarketView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chain": {
+            "type": "string",
+            "example": "solana"
+          },
+          "protocol": {
+            "type": "string",
+            "example": "kamino"
+          },
+          "protocol_market_ref": {
+            "type": "string"
+          },
+          "pool_ref": {
+            "type": "string"
+          },
+          "underlying_token": {
+            "$ref": "#/components/schemas/AssetRef"
+          },
+          "collateral_factor": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.80
+          },
+          "liquidation_threshold": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.85
+          },
+          "liquidation_bonus": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.05
+          },
+          "borrow_cap": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "supply_cap": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_isolated": {
+            "type": "boolean"
+          },
+          "rate_mode_support": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "variable"
+            ]
+          },
+          "oracle_source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "pyth"
+          },
+          "current_supply_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.034
+          },
+          "current_borrow_rate_variable": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.058
+          },
+          "utilization": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.67
+          },
+          "price_usd": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 150.25
+          },
+          "available_amount": {
+            "type": "string"
+          },
+          "borrowed_amount": {
+            "type": "string"
+          },
+          "available_amount_display": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "borrowed_amount_display": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lending_market_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "emergency_mode": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "borrow_disabled": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "chain",
+          "protocol",
+          "protocol_market_ref",
+          "pool_ref",
+          "underlying_token",
+          "is_isolated",
+          "rate_mode_support",
+          "available_amount",
+          "borrowed_amount",
+          "as_of"
+        ]
+      },
+      "MarketPagedResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketView"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "ObligationHistoryPoint": {
+        "type": "object",
+        "properties": {
+          "obligation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "backend_health_score": {
+            "type": "number"
+          },
+          "effective_ltv": {
+            "type": "number"
+          },
+          "total_collateral_value_usd": {
+            "type": "number"
+          },
+          "total_borrow_value_usd": {
+            "type": "number"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "obligation_id",
+          "backend_health_score",
+          "effective_ltv",
+          "total_collateral_value_usd",
+          "total_borrow_value_usd",
+          "as_of"
+        ]
+      },
+      "ObligationHistoryPagedResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObligationHistoryPoint"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "ObligationRiskResponse": {
+        "type": "object",
+        "properties": {
+          "obligation": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "chain": {
+                "type": "string",
+                "example": "solana"
+              },
+              "protocol": {
+                "type": "string",
+                "example": "kamino"
+              },
+              "protocol_obligation_ref": {
+                "type": "string"
+              },
+              "pool_ref": {
+                "type": "string"
+              },
+              "wallet_address": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "chain",
+              "protocol",
+              "protocol_obligation_ref",
+              "pool_ref",
+              "wallet_address"
+            ]
+          },
+          "risk": {
+            "type": "object",
+            "properties": {
+              "protocol_health_factor": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "example": 2.35
+              },
+              "backend_health_score": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "example": 2.35
+              },
+              "total_collateral_value_usd": {
+                "type": "number"
+              },
+              "total_borrow_value_usd": {
+                "type": "number"
+              },
+              "effective_ltv": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "max_borrowable_value_usd": {
+                "type": "number"
+              },
+              "liquidation_threshold_ltv": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "liquidation_buffer": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ltv_model_version": {
+                "type": "string"
+              },
+              "as_of": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "total_collateral_value_usd",
+              "total_borrow_value_usd",
+              "max_borrowable_value_usd",
+              "ltv_model_version",
+              "as_of"
+            ]
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/CoverageResponse"
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "obligation",
+          "risk",
+          "coverage"
+        ]
+      },
+      "ObligationView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "protocol": {
+            "type": "string",
+            "example": "kamino"
+          },
+          "protocol_obligation_ref": {
+            "type": "string"
+          },
+          "pool_ref": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "at_risk",
+              "liquidatable",
+              "unknown"
+            ]
+          },
+          "protocol_health_factor": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 2.35
+          },
+          "backend_health_score": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 2.35
+          },
+          "total_collateral_value_usd": {
+            "type": "number",
+            "example": 1234.56
+          },
+          "total_borrow_value_usd": {
+            "type": "number",
+            "example": 567.89
+          },
+          "net_value_usd": {
+            "type": "number",
+            "example": 666.67
+          },
+          "effective_ltv": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.46
+          },
+          "max_borrowable_value_usd": {
+            "type": "number"
+          },
+          "liquidation_threshold_ltv": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.85
+          },
+          "liquidation_buffer": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.39
+          },
+          "ltv_model_version": {
+            "type": "string",
+            "example": "v1"
+          },
+          "last_protocol_sync_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "protocol",
+          "protocol_obligation_ref",
+          "pool_ref",
+          "status",
+          "total_collateral_value_usd",
+          "total_borrow_value_usd",
+          "net_value_usd",
+          "max_borrowable_value_usd",
+          "ltv_model_version",
+          "last_protocol_sync_at",
+          "as_of"
+        ]
+      },
+      "PositionHistoryPoint": {
+        "type": "object",
+        "properties": {
+          "position_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "obligation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "market_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position_type": {
+            "type": "string",
+            "enum": [
+              "supply",
+              "borrow"
+            ]
+          },
+          "asset": {
+            "$ref": "#/components/schemas/AssetRef"
+          },
+          "principal_amount": {
+            "type": "string"
+          },
+          "current_amount": {
+            "type": "string"
+          },
+          "current_value_usd": {
+            "type": "number"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "position_id",
+          "obligation_id",
+          "market_id",
+          "position_type",
+          "principal_amount",
+          "current_amount",
+          "current_value_usd",
+          "as_of"
+        ]
+      },
+      "PositionHistoryPagedResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionHistoryPoint"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "PositionView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "obligation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "market_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "supply",
+              "borrow"
+            ]
+          },
+          "rate_mode": {
+            "type": "string",
+            "example": "variable"
+          },
+          "asset": {
+            "$ref": "#/components/schemas/AssetRef"
+          },
+          "principal_amount": {
+            "type": "string",
+            "description": "Raw amount as string for precision",
+            "example": "1000000000"
+          },
+          "current_amount": {
+            "type": "string",
+            "example": "1005000000"
+          },
+          "current_value_usd": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 150.75
+          },
+          "ltv_contribution": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.12
+          },
+          "liquidation_buffer": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.73
+          },
+          "supply_apy": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.034
+          },
+          "borrow_apy_variable": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "obligation_id",
+          "market_id",
+          "type",
+          "rate_mode",
+          "asset",
+          "principal_amount",
+          "current_amount",
+          "as_of"
+        ]
+      },
+      "PricePagedResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceView"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "PriceTickView": {
+        "type": "object",
+        "properties": {
+          "price_feed_id": {
+            "type": "string"
+          },
+          "asset_token_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "price_usd": {
+            "type": "number"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "price_feed_id",
+          "asset_token_id",
+          "chain",
+          "protocol",
+          "price_usd",
+          "as_of"
+        ]
+      },
+      "PriceTickPagedResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceTickView"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "PriceView": {
+        "type": "object",
+        "properties": {
+          "price_feed_id": {
+            "type": "string"
+          },
+          "asset_token_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "price_usd": {
+            "type": "number",
+            "example": 150.25
+          },
+          "source": {
+            "type": "string",
+            "example": "kamino"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "staleness_seconds": {
+            "type": "number",
+            "example": 12
+          }
+        },
+        "required": [
+          "price_feed_id",
+          "asset_token_id",
+          "price_usd",
+          "source",
+          "as_of",
+          "staleness_seconds"
+        ]
+      },
+      "TokenPagedResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenView"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "TokenView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chain": {
+            "type": "string",
+            "example": "solana"
+          },
+          "address_or_mint": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string",
+            "example": "SOL"
+          },
+          "name": {
+            "type": "string",
+            "example": "Wrapped SOL"
+          },
+          "decimals": {
+            "type": "integer",
+            "example": 9
+          },
+          "logo_uri": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "price_feed_id": {
+            "type": "string"
+          },
+          "is_stablecoin": {
+            "type": "boolean"
+          },
+          "risk_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "chain",
+          "address_or_mint",
+          "symbol",
+          "name",
+          "decimals",
+          "price_feed_id",
+          "is_stablecoin",
+          "risk_flags",
+          "as_of"
+        ]
+      },
+      "WalletLendingSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "obligation": {
+            "$ref": "#/components/schemas/ObligationView"
+          },
+          "deposits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionView"
+            }
+          },
+          "borrows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionView"
+            }
+          },
+          "total_collateral_value_usd": {
+            "type": "number"
+          },
+          "total_borrow_value_usd": {
+            "type": "number"
+          },
+          "net_value_usd": {
+            "type": "number"
+          },
+          "effective_ltv": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "health_factor": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "max_borrowable_value_usd": {
+            "type": "number"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/CoverageResponse"
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "obligation",
+          "deposits",
+          "borrows",
+          "total_collateral_value_usd",
+          "total_borrow_value_usd",
+          "net_value_usd",
+          "max_borrowable_value_usd",
+          "coverage"
+        ]
+      },
+      "WalletObligationsResponse": {
+        "type": "object",
+        "properties": {
+          "wallet": {
+            "$ref": "#/components/schemas/WalletRef"
+          },
+          "obligations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObligationView"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/CoverageResponse"
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "wallet",
+          "obligations",
+          "limit",
+          "offset",
+          "total",
+          "coverage"
+        ]
+      },
+      "WalletPositionsResponse": {
+        "type": "object",
+        "properties": {
+          "wallet": {
+            "$ref": "#/components/schemas/WalletRef"
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionView"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/CoverageResponse"
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "wallet",
+          "positions",
+          "limit",
+          "offset",
+          "total",
+          "coverage"
+        ]
+      },
+      "WalletRef": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string",
+            "example": "solana"
+          },
+          "address": {
+            "type": "string"
+          },
+          "external_user_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "chain",
+          "address"
+        ]
+      },
+      "WalletSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "wallet": {
+            "$ref": "#/components/schemas/WalletRef"
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "total_collateral_value_usd": {
+                "type": "number",
+                "example": 1234.56
+              },
+              "total_borrow_value_usd": {
+                "type": "number",
+                "example": 567.89
+              },
+              "effective_ltv": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "example": 0.46
+              },
+              "number_of_obligations": {
+                "type": "integer",
+                "example": 1
+              },
+              "protocols": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "kamino"
+                ]
+              }
+            },
+            "required": [
+              "total_collateral_value_usd",
+              "total_borrow_value_usd",
+              "number_of_obligations",
+              "protocols"
+            ]
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/CoverageResponse"
+          },
+          "outcome": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "wallet",
+          "summary",
+          "coverage"
+        ]
+      },
+      "WebhookEventResponse": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "type": "object",
+            "properties": {
+              "event_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "event_type": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "protocol": {
+                "type": "string"
+              },
+              "occurred_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "subscription_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "payload": {
+                "type": "object"
+              },
+              "as_of": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "event_id",
+              "event_type",
+              "chain",
+              "protocol",
+              "occurred_at",
+              "subscription_id"
+            ]
+          },
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "delivery_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "attempt_number": {
+                  "type": "integer"
+                },
+                "status_code": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "success": {
+                  "type": "boolean"
+                },
+                "sent_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "completed_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "response_body": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "delivery_id",
+                "attempt_number",
+                "success",
+                "sent_at"
+              ]
+            }
+          }
+        },
+        "required": [
+          "event",
+          "deliveries"
+        ]
+      },
+      "WiringResponse": {
+        "type": "object",
+        "properties": {
+          "adapters": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "indexers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "snapshot_store": {
+            "type": "string"
+          },
+          "webhook_engine": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "adapters",
+          "indexers",
+          "snapshot_store",
+          "webhook_engine"
+        ]
       }
     },
     "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+      "BearerApiKey": {
+        "description": "API key obtained from the platform (e.g. lp_xxx_yyy)",
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   }

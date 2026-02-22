@@ -1,0 +1,132 @@
+---
+title: TypeScript SDK
+description: Install and use the official Land SDK
+---
+
+## Installation
+
+```bash
+npm install @trylandeu/land-sdk
+```
+
+## Creating a Client
+
+```typescript
+import { createLandBackendClient } from "@trylandeu/land-sdk";
+
+const land = createLandBackendClient({
+  baseUrl: "https://api2.tryland.eu",
+  apiKey: "lp_xxx_yyy",
+});
+```
+
+### Client Options
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `baseUrl` | `string` | *required* | API base URL |
+| `apiKey` | `string` | — | API key (sent as `x-api-key` header) |
+| `apiKeyHeader` | `string` | `x-api-key` | Header name for the API key |
+| `timeout` | `number` | `30000` | Request timeout in milliseconds |
+| `defaultHeaders` | `Record<string, string>` | `{}` | Headers sent with every request |
+| `getHeaders` | `() => Record<string, string>` | — | Dynamic headers callback (can be async) |
+| `fetchImpl` | `typeof fetch` | `globalThis.fetch` | Custom fetch implementation |
+
+## Available Methods
+
+### Wallets
+
+```typescript
+land.getWalletSummary({ chain, address })
+land.listWalletObligations({ chain, address, query? })
+land.listWalletPositions({ chain, address, query? })
+land.getWalletLendingSummary({ chain, address, query })
+```
+
+### Risk
+
+```typescript
+land.getObligationRisk(obligationId)
+```
+
+### Markets & Assets
+
+```typescript
+land.listMarkets(query?)
+land.getMarket(id)
+land.listTokens(query?)
+land.listPrices(query?)
+```
+
+### Historical Data
+
+```typescript
+land.listHistoryEvents(query?)
+land.listHistoryPrices(query?)
+land.listHistoryRates(query?)
+land.listObligationHistory(obligationId, query?)
+land.listPositionHistory(positionId, query?)
+```
+
+### Webhooks
+
+```typescript
+land.createWebhookSubscription(request)
+land.listWebhookSubscriptions(query?)
+land.getWebhookSubscription(subscriptionId)
+land.updateWebhookSubscription(subscriptionId, request)
+land.getWebhookEvent(eventId)
+```
+
+### System
+
+```typescript
+land.healthz()
+land.readyz()
+land.getAuthContext()
+```
+
+## Error Handling
+
+The SDK throws `LandBackendApiError` for non-2xx responses:
+
+```typescript
+import { LandBackendApiError } from "@trylandeu/land-sdk";
+
+try {
+  const market = await land.getMarket("nonexistent-id");
+} catch (error) {
+  if (error instanceof LandBackendApiError) {
+    console.log(error.status);  // 404
+    console.log(error.code);    // "NOT_FOUND"
+    console.log(error.message); // "Market not found"
+    console.log(error.body);    // raw response body
+  }
+}
+```
+
+## Pagination
+
+All list methods return a `PagedResponse` with `items`, `limit`, `offset`, and `total`:
+
+```typescript
+const page = await land.listMarkets({ limit: 10, offset: 0 });
+
+console.log(`Page: ${page.items.length} of ${page.total}`);
+console.log(`Next offset: ${page.offset + page.limit}`);
+```
+
+Iterate through all pages:
+
+```typescript
+let offset = 0;
+const limit = 100;
+const allMarkets = [];
+
+while (true) {
+  const page = await land.listMarkets({ limit, offset });
+  allMarkets.push(...page.items);
+  if (allMarkets.length >= page.total) break;
+  offset += limit;
+}
+```

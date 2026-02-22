@@ -1,0 +1,121 @@
+---
+title: Wallets & Positions
+description: Query wallet summaries, obligations, and individual positions
+---
+
+<Snippet file="api-base-url.mdx" />
+
+## Wallet Summary
+
+Get an aggregate view of a wallet's lending activity across all protocols and pools:
+
+```typescript
+const summary = await land.getWalletSummary({
+  chain: "solana",
+  address: "YourWalletAddress...",
+});
+
+console.log(summary.summary.total_collateral_value_usd); // 1234.56
+console.log(summary.summary.total_borrow_value_usd);     // 567.89
+console.log(summary.summary.effective_ltv);               // 0.46
+console.log(summary.summary.number_of_obligations);       // 1
+console.log(summary.summary.protocols);                   // ["kamino"]
+```
+
+The response includes wallet metadata, aggregate metrics, and [coverage information](/concepts/data-freshness#coverage-metadata).
+
+## Wallet Obligations
+
+List all lending obligations for a wallet. Each obligation represents a position in a specific lending pool:
+
+```typescript
+const obligations = await land.listWalletObligations({
+  chain: "solana",
+  address: "YourWalletAddress...",
+});
+
+for (const ob of obligations.obligations) {
+  console.log(`Pool: ${ob.pool_ref}`);
+  console.log(`Status: ${ob.status}`);           // healthy, at_risk, liquidatable
+  console.log(`Health: ${ob.backend_health_score}`);
+  console.log(`Collateral: $${ob.total_collateral_value_usd}`);
+  console.log(`Borrows: $${ob.total_borrow_value_usd}`);
+}
+```
+
+Filter by pool:
+
+```typescript
+const filtered = await land.listWalletObligations({
+  chain: "solana",
+  address: "YourWalletAddress...",
+  query: { pool_ref: "MainMarketPoolAddress..." },
+});
+```
+
+## Wallet Positions
+
+List individual supply and borrow positions:
+
+```typescript
+const positions = await land.listWalletPositions({
+  chain: "solana",
+  address: "YourWalletAddress...",
+});
+
+for (const pos of positions.positions) {
+  console.log(`${pos.type} ${pos.asset.symbol}: $${pos.current_value_usd}`);
+  if (pos.type === "supply") {
+    console.log(`  APY: ${(pos.supply_apy! * 100).toFixed(2)}%`);
+  } else {
+    console.log(`  APY: ${(pos.borrow_apy_variable! * 100).toFixed(2)}%`);
+  }
+}
+```
+
+Filter positions:
+
+```typescript
+// Only borrow positions
+const borrows = await land.listWalletPositions({
+  chain: "solana",
+  address: "YourWalletAddress...",
+  query: { type: "borrow" },
+});
+
+// Positions for a specific asset
+const solPositions = await land.listWalletPositions({
+  chain: "solana",
+  address: "YourWalletAddress...",
+  query: { asset: "So11111111111111111111111111111111111111112" },
+});
+```
+
+## Lending Summary (Per-Pool)
+
+Get a detailed view of a wallet's position in a specific pool, including the obligation, all deposits, and all borrows:
+
+```typescript
+const detail = await land.getWalletLendingSummary({
+  chain: "solana",
+  address: "YourWalletAddress...",
+  query: { pool_ref: "MainMarketPoolAddress..." },
+});
+
+console.log(`Health factor: ${detail.health_factor}`);
+console.log(`Deposits: ${detail.deposits.length}`);
+console.log(`Borrows: ${detail.borrows.length}`);
+console.log(`Net value: $${detail.net_value_usd}`);
+```
+
+## Wallet Tracking Status
+
+When you first query a wallet, Land begins indexing its on-chain data. The `coverage.wallet_tracking_status` field tells you where in the process the wallet is:
+
+| Status | Description |
+| --- | --- |
+| `not_tracked_yet` | First query — indexing has started |
+| `seeded` | Initial data load in progress |
+| `tracked` | Fully indexed and up to date |
+
+See [Data Freshness](/concepts/data-freshness#wallet-tracking-status) for more details.

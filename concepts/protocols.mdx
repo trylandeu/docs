@@ -1,0 +1,60 @@
+---
+title: Protocols
+description: Supported lending protocols and cross-protocol normalization
+---
+
+Land normalizes data from multiple DeFi lending protocols into a single API. You query the same endpoints regardless of the underlying protocol — the `chain` and `protocol` query parameters let you filter by source.
+
+## Supported Protocols
+
+### Kamino Finance (Solana) — Live
+
+Kamino is a lending protocol on Solana built on top of the Kamino Lend (kLend) smart contracts.
+
+| Parameter | Value |
+| --- | --- |
+| `chain` | `solana` |
+| `protocol` | `kamino` |
+| Pools | Main Market, Altcoin Market, JLP Market, and more |
+
+All Kamino lending markets are indexed, including supply/borrow positions, interest rates, oracle prices, and on-chain events.
+
+### Aave v3 (EVM) — Coming Soon
+
+Aave v3 is the leading lending protocol across EVM chains including Ethereum, Base, and Arbitrum.
+
+| Parameter | Value |
+| --- | --- |
+| `chain` | `evm` |
+| `protocol` | `aave-v3` |
+| Chains | Ethereum, Base, Arbitrum |
+
+## Cross-Protocol Normalization
+
+The same data model applies regardless of protocol:
+
+- **Obligations** map to Kamino obligations or Aave user positions
+- **Positions** map to individual supply/borrow entries
+- **Markets** map to Kamino reserves or Aave reserve configurations
+- **Health factor** and **LTV** are computed consistently across protocols
+
+## Filtering by Protocol
+
+All list endpoints support `chain` and `protocol` query parameters:
+
+```typescript
+// Kamino markets only
+const kaminoMarkets = await land.listMarkets({
+  chain: "solana",
+  protocol: "kamino",
+});
+
+// All markets (when multiple protocols are live)
+const allMarkets = await land.listMarkets();
+```
+
+```bash
+# Filter by chain and protocol
+curl "https://api2.tryland.eu/markets?chain=solana&protocol=kamino" \
+  -H "Authorization: Bearer lp_xxx_yyy"
+```

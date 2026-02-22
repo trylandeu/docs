@@ -1,0 +1,74 @@
+---
+title: Webhooks
+description: Receive real-time notifications for lending events
+---
+
+<Snippet file="api-base-url.mdx" />
+
+Webhooks let you receive push notifications when lending events occur, instead of polling the API.
+
+## Event Types
+
+| Event Type | Description |
+| --- | --- |
+| `HEALTH_FACTOR_UNDER_THRESHOLD` | Obligation health factor dropped below a configured threshold |
+| `PRICE_MOVED` | Asset price changed by more than a configured percentage |
+| `LIQUIDATION_OBSERVED` | A liquidation event was detected on-chain |
+| `RATE_CHANGED` | Supply or borrow rate changed significantly |
+| `DEPOSIT_OBSERVED` | A deposit was observed on-chain |
+| `BORROW_OBSERVED` | A borrow was observed on-chain |
+| `REPAY_OBSERVED` | A repayment was observed on-chain |
+| `WITHDRAW_OBSERVED` | A withdrawal was observed on-chain |
+| `LTV_CHANGED` | Obligation LTV changed |
+| `LTV_APPROACHING_THRESHOLD` | LTV is approaching the liquidation threshold |
+| `OBLIGATION_STATUS_CHANGED` | Obligation status changed (e.g., healthy → at_risk) |
+
+## Webhook Payload
+
+Each webhook delivery includes:
+
+```json
+{
+  "event_id": "uuid",
+  "event_type": "HEALTH_FACTOR_UNDER_THRESHOLD",
+  "chain": "solana",
+  "protocol": "kamino",
+  "occurred_at": "2026-02-22T11:55:00Z",
+  "subscription_id": "uuid",
+  "payload": {
+    "obligation_id": "uuid",
+    "health_factor": 1.15,
+    "threshold": 1.5
+  }
+}
+```
+
+## Setup
+
+Webhook subscriptions are managed through the [admin console](https://platform.tryland.eu). You configure:
+
+1. **Event type** — which events to subscribe to
+2. **Callback URL** — your HTTPS endpoint that receives POST requests
+3. **Filters** — optional chain/protocol/wallet filters
+4. **Auth config** — optional authentication headers sent with each delivery
+
+## Delivery Guarantees
+
+- **At-least-once delivery** — events may be delivered more than once
+- Use the `event_id` field to deduplicate
+- Failed deliveries are retried with exponential backoff within the configured retry window
+
+## Retrieving Event Details
+
+Look up a specific webhook event and its delivery history:
+
+```typescript
+const event = await land.getWebhookEvent("event-uuid");
+
+console.log(`Event: ${event.event.event_type}`);
+console.log(`Occurred: ${event.event.occurred_at}`);
+
+for (const delivery of event.deliveries) {
+  console.log(`  Attempt ${delivery.attempt_number}: ${delivery.success ? "OK" : "Failed"} (${delivery.status_code})`);
+}
+```

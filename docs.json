@@ -1,122 +1,167 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Land Documentation",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://tryland.eu"
+  },
+  "favicon": "/favicon.svg",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
     "dark": "#15803D"
   },
-  "favicon": "/favicon.svg",
-  "navigation": {
-    "tabs": [
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API reference",
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:founders@tryland.eu"
+      },
+      {
+        "label": "Dashboard",
+        "href": "https://platform.tryland.eu"
+      }
+    ]
+  },
+  "anchors": [
+    {
+      "anchor": "API Playground",
+      "href": "https://api2.tryland.eu/swagger",
+      "icon": "play"
+    }
+  ],
+  "tabs": [
+    {
+      "id": "api-reference",
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": ["index", "quickstart", "authentication"]
+      },
+      {
+        "group": "Core Concepts",
+        "pages": [
+          "concepts/data-model",
+          "concepts/data-freshness",
+          "concepts/protocols"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/wallets-and-positions",
+          "guides/markets-and-prices",
+          "guides/risk",
+          "guides/historical-data",
+          "guides/webhooks",
+          "guides/sdk"
+        ]
       }
     ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+    "tabs": {
+      "api-reference": [
+        {
+          "group": "Overview",
+          "pages": ["api-reference/introduction"]
+        },
+        {
+          "group": "Wallets",
+          "pages": [
+            {
+              "openapi": "GET /wallets/{chain}/{address}"
+            },
+            {
+              "openapi": "GET /wallets/{chain}/{address}/obligations"
+            },
+            {
+              "openapi": "GET /wallets/{chain}/{address}/positions"
+            },
+            {
+              "openapi": "GET /wallets/{chain}/{address}/summary"
+            }
+          ]
+        },
+        {
+          "group": "Obligations",
+          "pages": [
+            {
+              "openapi": "GET /obligations/{id}/risk"
+            }
+          ]
+        },
+        {
+          "group": "Markets",
+          "pages": [
+            {
+              "openapi": "GET /markets"
+            },
+            {
+              "openapi": "GET /markets/{id}"
+            }
+          ]
+        },
+        {
+          "group": "Assets",
+          "pages": [
+            {
+              "openapi": "GET /tokens"
+            },
+            {
+              "openapi": "GET /prices"
+            }
+          ]
+        },
+        {
+          "group": "Historical Data",
+          "pages": [
+            {
+              "openapi": "GET /history/events"
+            },
+            {
+              "openapi": "GET /history/prices"
+            },
+            {
+              "openapi": "GET /history/rates"
+            },
+            {
+              "openapi": "GET /history/obligations/{id}"
+            },
+            {
+              "openapi": "GET /history/positions/{id}"
+            }
+          ]
+        },
+        {
+          "group": "Webhooks",
+          "pages": [
+            {
+              "openapi": "GET /webhooks/events/{event_id}"
+            }
+          ]
+        },
+        {
+          "group": "System",
+          "pages": [
+            {
+              "openapi": "GET /healthz"
+            },
+            {
+              "openapi": "GET /readyz"
+            }
+          ]
+        }
+      ]
     }
   },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+  "openapi": "api-reference/openapi.json",
+  "feedback": {
+    "thumbsRating": true
   }
 }

@@ -1,0 +1,75 @@
+---
+title: Risk & LTV
+description: Health factors, loan-to-value ratios, and liquidation thresholds
+---
+
+<Snippet file="api-base-url.mdx" />
+
+## Obligation Risk
+
+Get detailed risk metrics for a specific obligation:
+
+```typescript
+const risk = await land.getObligationRisk("obligation-uuid");
+
+console.log(`Health factor: ${risk.risk.backend_health_score}`);
+console.log(`Effective LTV: ${risk.risk.effective_ltv}`);
+console.log(`Liquidation threshold: ${risk.risk.liquidation_threshold_ltv}`);
+console.log(`Liquidation buffer: ${risk.risk.liquidation_buffer}`);
+console.log(`Max borrowable: $${risk.risk.max_borrowable_value_usd}`);
+```
+
+## Understanding LTV
+
+**Loan-to-Value (LTV)** is the ratio of borrowed value to collateral value:
+
+```
+LTV = total_borrow_value_usd / total_collateral_value_usd
+```
+
+- `effective_ltv` — the current LTV of the obligation
+- `liquidation_threshold_ltv` — the LTV at which the protocol begins liquidation
+- `liquidation_buffer` — the gap between current LTV and liquidation threshold
+
+A larger buffer means the position is safer.
+
+## Understanding Health Factor
+
+The **health factor** measures how far a position is from liquidation:
+
+```
+health_factor = liquidation_threshold_ltv / effective_ltv
+```
+
+| Health Factor | Status | Meaning |
+| --- | --- | --- |
+| > 2.0 | `healthy` | Well-collateralized |
+| 1.0 – 2.0 | `at_risk` | Approaching liquidation |
+| < 1.0 | `liquidatable` | Eligible for liquidation |
+
+Land provides two health metrics:
+
+- `protocol_health_factor` — the health factor as reported by the underlying protocol
+- `backend_health_score` — Land's independently computed health score
+
+## Model Versioning
+
+Risk calculations are versioned via the `ltv_model_version` field (e.g., `v1`). If the computation model changes, the version increments so you can track which model produced a given score.
+
+## Example: Monitor Position Health
+
+```typescript
+const obligations = await land.listWalletObligations({
+  chain: "solana",
+  address: "YourWalletAddress...",
+});
+
+for (const ob of obligations.obligations) {
+  if (ob.status === "at_risk" || ob.status === "liquidatable") {
+    console.warn(
+      `Warning: ${ob.pool_ref} is ${ob.status} ` +
+      `(health: ${ob.backend_health_score}, LTV: ${ob.effective_ltv})`
+    );
+  }
+}
+```

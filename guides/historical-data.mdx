@@ -1,0 +1,134 @@
+---
+title: Historical Data
+description: Query time-series data for events, prices, rates, and positions
+---
+
+<Snippet file="api-base-url.mdx" />
+
+Land stores historical snapshots in ClickHouse for fast time-series queries. You can retrieve past events, prices, interest rates, and position/obligation snapshots.
+
+## Events
+
+List on-chain events like deposits, borrows, repayments, and withdrawals:
+
+```typescript
+const events = await land.listHistoryEvents({
+  chain: "solana",
+  protocol: "kamino",
+  wallet_address: "YourWalletAddress...",
+  since: "2026-01-01T00:00:00Z",
+  limit: 50,
+});
+
+for (const event of events.items) {
+  console.log(`${event.occurred_at}: ${event.event_type} (${event.action})`);
+}
+```
+
+Filter by event type or action:
+
+```typescript
+const deposits = await land.listHistoryEvents({
+  action: "deposit",
+  since: "2026-02-01T00:00:00Z",
+});
+```
+
+## Historical Prices
+
+Query price history for any indexed asset:
+
+```typescript
+const prices = await land.listHistoryPrices({
+  chain: "solana",
+  asset_token_id: "token-uuid",
+  since: "2026-02-01T00:00:00Z",
+  until: "2026-02-22T00:00:00Z",
+});
+
+for (const tick of prices.items) {
+  console.log(`${tick.as_of}: $${tick.price_usd}`);
+}
+```
+
+## Historical Rates
+
+Query supply/borrow APY and utilization history for markets:
+
+```typescript
+const rates = await land.listHistoryRates({
+  market_id: "market-uuid",
+  frequency: "hour",
+  since: "2026-02-01T00:00:00Z",
+});
+
+for (const rate of rates.items) {
+  console.log(`${rate.as_of}: supply=${(rate.supply_apy * 100).toFixed(2)}% borrow=${(rate.borrow_apy_variable * 100).toFixed(2)}%`);
+}
+```
+
+The `frequency` parameter controls the granularity of the time series:
+
+| Value | Description |
+| --- | --- |
+| `minute` | One data point per minute (default) |
+| `hour` | One data point per hour |
+| `day` | One data point per day |
+
+## Obligation History
+
+Track how an obligation's risk metrics changed over time:
+
+```typescript
+const history = await land.listObligationHistory("obligation-uuid", {
+  since: "2026-02-01T00:00:00Z",
+});
+
+for (const point of history.items) {
+  console.log(`${point.as_of}: LTV=${point.effective_ltv} health=${point.backend_health_score}`);
+}
+```
+
+## Position History
+
+Track how a specific position's value changed over time:
+
+```typescript
+const history = await land.listPositionHistory("position-uuid", {
+  since: "2026-02-01T00:00:00Z",
+});
+
+for (const point of history.items) {
+  console.log(`${point.as_of}: ${point.current_amount} ($${point.current_value_usd})`);
+}
+```
+
+## Pagination
+
+All history endpoints support `limit` and `offset` for pagination:
+
+```typescript
+// First page
+const page1 = await land.listHistoryEvents({ limit: 100, offset: 0 });
+
+// Next page
+const page2 = await land.listHistoryEvents({ limit: 100, offset: 100 });
+
+console.log(`Showing ${page1.items.length} of ${page1.total} total events`);
+```
+
+## Time Range Filtering
+
+Use `since` and `until` to narrow the time window. Both accept ISO 8601 timestamps:
+
+```typescript
+const lastWeek = await land.listHistoryPrices({
+  asset_token_id: "token-uuid",
+  since: "2026-02-15T00:00:00Z",
+  until: "2026-02-22T00:00:00Z",
+});
+```
+
+<Note>
+Historical data is available from the wallet's coverage start point forward. See [Data Freshness](/concepts/data-freshness#coverage-metadata) for details on coverage.
+</Note>

@@ -1,0 +1,77 @@
+---
+title: Data Freshness
+description: How Land guarantees data recency and handles staleness
+---
+
+<Snippet file="freshness-note.mdx" />
+
+## Freshness Guarantees
+
+Every response from the Land API includes timestamps that tell you exactly how fresh the data is.
+
+### The `as_of` Field
+
+Every data object includes an `as_of` timestamp indicating when the data was last computed or synced from the underlying protocol. Use this field to determine the age of any piece of data.
+
+```json
+{
+  "price_usd": 150.25,
+  "as_of": "2026-02-22T12:00:05Z",
+  "staleness_seconds": 12
+}
+```
+
+### Staleness Detection
+
+Price responses include a `staleness_seconds` field — the number of seconds since the price was last updated on-chain. This helps you distinguish between a fresh price and one that hasn't been updated by the oracle in a while.
+
+## Fail-Closed Behavior
+
+Land follows a fail-closed approach to stale data. Instead of returning potentially outdated values, the API returns a **503 Service Unavailable** error when data is too stale to be reliable.
+
+```json
+{
+  "code": "STATE_TOO_OLD",
+  "message": "Indexer data is too stale to serve a reliable response"
+}
+```
+
+Related error codes:
+
+| Code | Description |
+| --- | --- |
+| `INDEXER_LAGGING` | The indexer is behind and data may not reflect the latest on-chain state |
+| `PRICE_TOO_OLD` | Oracle price data is too stale to be reliable |
+| `STATE_TOO_OLD` | General staleness — the indexed state is too far behind |
+
+## Coverage Metadata
+
+Wallet-scoped responses include a `coverage` object that describes what data range is available:
+
+```json
+{
+  "coverage": {
+    "coverage_mode": "forward_only",
+    "coverage_start_slot": 280000000,
+    "coverage_start_block": null,
+    "wallet_tracking_status": "tracked",
+    "first_tracked_at": "2026-01-15T10:00:00Z"
+  }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `coverage_mode` | `full` (complete history) or `forward_only` (data from first tracking onward) |
+| `coverage_start_slot` | Solana slot number from which data is available |
+| `coverage_start_block` | EVM block number from which data is available |
+| `wallet_tracking_status` | `not_tracked_yet`, `seeded`, or `tracked` |
+| `first_tracked_at` | Timestamp when tracking began for this wallet |
+
+### Wallet Tracking Status
+
+When you first query a wallet, it goes through a tracking lifecycle:
+
+1. **`not_tracked_yet`** — The wallet has never been queried. Land begins indexing.
+2. **`seeded`** — Initial data load is in progress. Partial data may be available.
+3. **`tracked`** — The wallet is fully indexed and data is up to date.

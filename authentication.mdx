@@ -1,0 +1,62 @@
+---
+title: Authentication
+description: API keys, rate limits, and security best practices
+---
+
+## API Keys
+
+All API requests require authentication via a Bearer token in the `Authorization` header:
+
+```bash
+Authorization: Bearer lp_xxx_yyy
+```
+
+API keys are created in the [dashboard](https://platform.tryland.eu) and follow the format `lp_{project_id}_{secret}`.
+
+## Multi-tenancy Model
+
+Land uses a hierarchical access model:
+
+- **Organization** — your company or team
+- **Project** — a logical grouping of API keys (e.g., production, staging)
+- **API Key** — credentials scoped to a project
+
+Each API key inherits the permissions and rate limits of its parent project.
+
+## Verifying Your Identity
+
+Use the auth context endpoint to verify your API key and see your tenant identity:
+
+```bash
+curl https://api2.tryland.eu/auth/context \
+  -H "Authorization: Bearer lp_xxx_yyy"
+```
+
+```json
+{
+  "tenant_id": "org_abc123",
+  "caller_id": "key_def456"
+}
+```
+
+Or with the SDK:
+
+```typescript
+const identity = await land.getAuthContext();
+console.log(identity.tenant_id); // "org_abc123"
+```
+
+## Rate Limits
+
+| Tier | Requests/Day | Requests/Second |
+| --- | --- | --- |
+| Free | 10,000 | 1 |
+
+When you exceed your rate limit, the API returns a `429 Too Many Requests` response. Contact [founders@tryland.eu](mailto:founders@tryland.eu) for higher limits.
+
+## Security Best Practices
+
+- **Never expose API keys in client-side code.** Use a backend proxy to make API calls.
+- **Rotate keys regularly.** Create a new key, update your services, then revoke the old one.
+- **Use separate keys for each environment.** Create distinct projects for production and staging.
+- **Monitor usage** in the dashboard to detect unusual activity.

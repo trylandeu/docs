@@ -1,0 +1,83 @@
+---
+title: Markets & Prices
+description: Query lending markets, token metadata, and oracle prices
+---
+
+<Snippet file="api-base-url.mdx" />
+
+## List Markets
+
+Get all available lending markets with rates, utilization, and risk parameters:
+
+```typescript
+const markets = await land.listMarkets({
+  chain: "solana",
+  protocol: "kamino",
+});
+
+for (const market of markets.items) {
+  console.log(`${market.underlying_token.symbol} (${market.lending_market_name})`);
+  console.log(`  Supply APY: ${((market.current_supply_rate ?? 0) * 100).toFixed(2)}%`);
+  console.log(`  Borrow APY: ${((market.current_borrow_rate_variable ?? 0) * 100).toFixed(2)}%`);
+  console.log(`  Utilization: ${((market.utilization ?? 0) * 100).toFixed(1)}%`);
+  console.log(`  Price: $${market.price_usd}`);
+}
+```
+
+Filter by pool:
+
+```typescript
+const mainMarket = await land.listMarkets({
+  pool_ref: "MainMarketPoolAddress...",
+});
+```
+
+## Get Market Detail
+
+Fetch a single market by ID for full detail including risk parameters:
+
+```typescript
+const market = await land.getMarket("market-uuid");
+
+console.log(`Collateral factor: ${market.collateral_factor}`);
+console.log(`Liquidation threshold: ${market.liquidation_threshold}`);
+console.log(`Liquidation bonus: ${market.liquidation_bonus}`);
+console.log(`Isolated: ${market.is_isolated}`);
+console.log(`Supply cap: ${market.supply_cap}`);
+console.log(`Borrow cap: ${market.borrow_cap}`);
+```
+
+## List Tokens
+
+Get metadata for all indexed tokens:
+
+```typescript
+const tokens = await land.listTokens({ chain: "solana" });
+
+for (const token of tokens.items) {
+  console.log(`${token.symbol} (${token.name})`);
+  console.log(`  Decimals: ${token.decimals}`);
+  console.log(`  Stablecoin: ${token.is_stablecoin}`);
+  console.log(`  Risk flags: ${token.risk_flags.join(", ") || "none"}`);
+}
+```
+
+Search by symbol:
+
+```typescript
+const sol = await land.listTokens({ symbol: "SOL" });
+```
+
+## List Prices
+
+Get current oracle prices with staleness tracking:
+
+```typescript
+const prices = await land.listPrices({ chain: "solana" });
+
+for (const price of prices.items) {
+  console.log(`$${price.price_usd} (${price.source}, ${price.staleness_seconds}s ago)`);
+}
+```
+
+<Snippet file="freshness-note.mdx" />

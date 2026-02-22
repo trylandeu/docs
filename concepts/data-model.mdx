@@ -1,0 +1,94 @@
+---
+title: Data Model
+description: Understand wallets, obligations, positions, and markets
+---
+
+Land normalizes lending data from multiple protocols into a consistent set of entities. Regardless of whether the underlying protocol is Kamino on Solana or Aave on Ethereum, you work with the same data model.
+
+## Entity Hierarchy
+
+```
+Wallet (chain + address)
+└── Obligation (one per lending pool)
+    └── Position (one per asset, supply or borrow)
+```
+
+## Wallets
+
+A wallet is identified by a `chain` and `address` pair. Wallets are the entry point for querying lending activity.
+
+| Field | Description |
+| --- | --- |
+| `chain` | Blockchain network (`solana`, `evm`) |
+| `address` | On-chain wallet address |
+| `external_user_id` | Optional identifier you assign via the dashboard |
+| `metadata` | Optional key-value metadata attached to the wallet |
+
+## Obligations
+
+An obligation represents a wallet's lending position within a specific pool. A wallet can have multiple obligations across different pools.
+
+| Field | Description |
+| --- | --- |
+| `id` | Unique obligation identifier |
+| `protocol` | Lending protocol (`kamino`, `aave-v3`) |
+| `pool_ref` | Protocol-specific pool identifier |
+| `status` | `healthy`, `at_risk`, `liquidatable`, or `unknown` |
+| `protocol_health_factor` | Health factor reported by the protocol |
+| `backend_health_score` | Land's computed health score |
+| `total_collateral_value_usd` | Total collateral value in USD |
+| `total_borrow_value_usd` | Total borrowed value in USD |
+| `net_value_usd` | Collateral minus borrows |
+| `effective_ltv` | Current loan-to-value ratio |
+| `liquidation_threshold_ltv` | LTV at which liquidation begins |
+| `liquidation_buffer` | Distance between current LTV and liquidation threshold |
+| `ltv_model_version` | Version of the LTV computation model |
+| `as_of` | Timestamp of the data snapshot |
+
+## Positions
+
+A position is a single supply or borrow within an obligation. Each position corresponds to one asset in one market.
+
+| Field | Description |
+| --- | --- |
+| `id` | Unique position identifier |
+| `obligation_id` | Parent obligation |
+| `market_id` | The market this position belongs to |
+| `type` | `supply` or `borrow` |
+| `rate_mode` | Interest rate mode (e.g., `variable`) |
+| `asset` | Token reference with `symbol`, `decimals`, `logo_uri` |
+| `principal_amount` | Original deposited/borrowed amount (raw, as string) |
+| `current_amount` | Current amount including accrued interest |
+| `current_value_usd` | Current USD value |
+| `supply_apy` | Current supply APY (for supply positions) |
+| `borrow_apy_variable` | Current variable borrow APY (for borrow positions) |
+| `as_of` | Timestamp of the data snapshot |
+
+## Markets
+
+A market represents a single asset in a lending pool — for example, SOL in Kamino's Main Market.
+
+| Field | Description |
+| --- | --- |
+| `id` | Unique market identifier |
+| `chain` / `protocol` | Chain and protocol identifiers |
+| `pool_ref` | Pool this market belongs to |
+| `underlying_token` | Token metadata (`symbol`, `decimals`, `logo_uri`) |
+| `collateral_factor` | Maximum LTV when used as collateral |
+| `liquidation_threshold` | LTV at which liquidation is triggered |
+| `current_supply_rate` | Current supply APY |
+| `current_borrow_rate_variable` | Current variable borrow APY |
+| `utilization` | Fraction of supplied assets currently borrowed |
+| `price_usd` | Current oracle price in USD |
+| `as_of` | Timestamp of the data snapshot |
+
+## Tokens and Prices
+
+**Tokens** are asset metadata (symbol, name, decimals, chain address). **Prices** are the latest oracle-reported USD prices with staleness tracking.
+
+| Field | Description |
+| --- | --- |
+| `price_usd` | Current price in USD |
+| `source` | Price oracle source |
+| `staleness_seconds` | Seconds since the price was last updated on-chain |
+| `as_of` | Timestamp of the price reading |

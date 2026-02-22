@@ -1,97 +1,45 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: Land Documentation
+description: Unified lending data API across DeFi protocols
 ---
 
-## Setting up
+<img
+  className="block dark:hidden"
+  src="/logo/light.svg"
+  alt="Land"
+  width="120"
+/>
+<img
+  className="hidden dark:block"
+  src="/logo/dark.svg"
+  alt="Land"
+  width="120"
+/>
 
-Get your documentation site up and running in minutes.
+Land provides a single API to query lending positions, market data, risk metrics, and historical trends across DeFi lending protocols. One integration gives you normalized data from Kamino (Solana), with Aave v3 (EVM) coming soon.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get your API key and make your first request in 5 minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Data Model" icon="diagram-project" href="/concepts/data-model">
+    Understand wallets, obligations, positions, and markets.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="SDK Guide" icon="code" href="/guides/sdk">
+    Install the TypeScript SDK and start building.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="API Reference" icon="square-terminal" href="/api-reference/introduction">
+    Explore every endpoint with request and response schemas.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Protocol Coverage
 
-Everything you need to create world-class documentation.
+| Protocol | Chain | Status |
+| --- | --- | --- |
+| Kamino Finance | Solana | Live |
+| Aave v3 | EVM (Ethereum, Base, Arbitrum) | Coming soon |
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Free Tier
 
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+Get started for free with 10,000 requests per day. [Create an account](https://platform.tryland.eu) to get your API key.

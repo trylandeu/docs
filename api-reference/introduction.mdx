@@ -1,33 +1,66 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: API Reference
+description: Base URL, authentication, pagination, and error handling
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Base URL
 
-## Welcome
-
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+```
+https://api2.tryland.eu
+```
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All endpoints (except health checks) require a Bearer token:
+
+```bash
+Authorization: Bearer lp_xxx_yyy
+```
+
+See [Authentication](/authentication) for details on obtaining and managing API keys.
+
+## Pagination
+
+List endpoints accept `limit` and `offset` query parameters:
+
+| Parameter | Type | Default | Range |
+| --- | --- | --- | --- |
+| `limit` | integer | 100 | 1–500 |
+| `offset` | integer | 0 | 0+ |
+
+Paginated responses include:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "items": [...],
+  "limit": 100,
+  "offset": 0,
+  "total": 42
+}
 ```
+
+## Error Format
+
+All errors return a JSON body with `code` and `message`:
+
+```json
+{
+  "code": "NOT_FOUND",
+  "message": "Market not found"
+}
+```
+
+### Common Error Codes
+
+| Code | HTTP Status | Description |
+| --- | --- | --- |
+| `BAD_REQUEST` | 400 | Invalid parameters or missing required fields |
+| `UNAUTHORIZED` | 401 | Invalid or missing API key |
+| `NOT_FOUND` | 404 | Resource does not exist |
+| `INDEXER_LAGGING` | 503 | Indexer is behind — data may be stale |
+| `PRICE_TOO_OLD` | 503 | Oracle price is too stale to serve |
+| `STATE_TOO_OLD` | 503 | Indexed state is too old to be reliable |
+
+## Interactive Playground
+
+Explore the API interactively using the [Swagger playground](https://api2.tryland.eu/swagger).
