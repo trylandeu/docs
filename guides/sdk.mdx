@@ -130,3 +130,24 @@ while (true) {
   offset += limit;
 }
 ```
+
+## Sorting
+
+All list methods accept `sort` and `order` parameters. Each endpoint defines its own set of valid sort fields:
+
+```typescript
+// Sort markets by supply rate, highest first
+const markets = await land.listMarkets({
+  sort: "current_supply_rate",
+  order: "desc",
+});
+
+// Sort positions by value, lowest first
+const positions = await land.listWalletPositions({
+  chain: "solana",
+  address: "YourWalletAddress...",
+  query: { sort: "current_value_usd", order: "asc" },
+});
+```
+
+See [API Reference](/api-reference/introduction#sorting) for the full list of sortable fields per endpoint.

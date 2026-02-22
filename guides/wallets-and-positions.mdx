@@ -43,6 +43,16 @@ for (const ob of obligations.obligations) {
 }
 ```
 
+Sort by collateral value:
+
+```typescript
+const sorted = await land.listWalletObligations({
+  chain: "solana",
+  address: "YourWalletAddress...",
+  query: { sort: "total_collateral_value_usd", order: "desc" },
+});
+```
+
 Filter by pool:
 
 ```typescript

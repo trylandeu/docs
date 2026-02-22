@@ -24,6 +24,22 @@ for (const market of markets.items) {
 }
 ```
 
+Sort by supply rate or symbol:
+
+```typescript
+// Highest supply APY first
+const topYield = await land.listMarkets({
+  sort: "current_supply_rate",
+  order: "desc",
+});
+
+// Alphabetical by symbol
+const alphabetical = await land.listMarkets({
+  sort: "symbol",
+  order: "asc",
+});
+```
+
 Filter by pool:
 
 ```typescript

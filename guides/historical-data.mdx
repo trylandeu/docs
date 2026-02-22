@@ -103,16 +103,26 @@ for (const point of history.items) {
 }
 ```
 
-## Pagination
+## Sorting and Pagination
 
-All history endpoints support `limit` and `offset` for pagination:
+All history endpoints support `sort`, `order`, `limit`, and `offset` parameters:
 
 ```typescript
-// First page
-const page1 = await land.listHistoryEvents({ limit: 100, offset: 0 });
+// Oldest events first
+const page1 = await land.listHistoryEvents({
+  limit: 100,
+  offset: 0,
+  sort: "occurred_at",
+  order: "asc",
+});
 
 // Next page
-const page2 = await land.listHistoryEvents({ limit: 100, offset: 100 });
+const page2 = await land.listHistoryEvents({
+  limit: 100,
+  offset: 100,
+  sort: "occurred_at",
+  order: "asc",
+});
 
 console.log(`Showing ${page1.items.length} of ${page1.total} total events`);
 ```
